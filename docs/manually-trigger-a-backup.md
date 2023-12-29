@@ -15,11 +15,11 @@ Previously, performing an immediate backup required overwriting the entrypoint o
 ```shell
 docker run \
   --rm \
-  --name vaultwarden_backup \
-  --volumes-from=vaultwarden \
-  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \
+  --name rclone_backup \
+  --volumes-from=your-container \
+  --mount type=volume,source=rclone-backup-data,target=/config/ \
   -e ... \
-  ttionya/vaultwarden-backup:latest backup
+  adrienpoupa/rclone-backup:latest backup
 ```
 
 You also need to mount the rclone config file and set the environment variables.
@@ -32,5 +32,5 @@ The only difference is that the environment variable `CRON` does not work becaus
 
 ## IMPORTANT
 
-**Manually triggering a backup only verifies that the environment variables are configured correctly, not that CRON is working properly. This is the [issue](https://github.com/ttionya/vaultwarden-backup/issues/53) that CRON may not work properly on ARM devices.**
+**Manually triggering a backup only verifies that the environment variables are configured correctly, not that CRON is working properly. This is the [issue](https://github.com/AdrienPoupa/rclone-backup/issues/53) that CRON may not work properly on ARM devices.**
 

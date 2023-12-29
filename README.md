@@ -1,63 +1,26 @@
-# vaultwarden backup
+# Rclone Backup
 
-[![Docker Image Version (latest by date)](https://img.shields.io/docker/v/ttionya/vaultwarden-backup?label=Version&logo=docker)](https://hub.docker.com/r/ttionya/vaultwarden-backup/tags) [![Docker Pulls](https://img.shields.io/docker/pulls/ttionya/vaultwarden-backup?label=Docker%20Pulls&logo=docker)](https://hub.docker.com/r/ttionya/vaultwarden-backup) [![GitHub](https://img.shields.io/github/license/ttionya/vaultwarden-backup?label=License&logo=github)](https://github.com/ttionya/vaultwarden-backup/blob/master/LICENSE)
+[![Docker Image Version (latest by date)](https://img.shields.io/docker/v/adrienpoupa/rclone-backup?label=Version&logo=docker)](https://hub.docker.com/r/adrienpoupa/rclone-backup/tags) [![Docker Pulls](https://img.shields.io/docker/pulls/adrienpoupa/rclone-backup?label=Docker%20Pulls&logo=docker)](https://hub.docker.com/r/adrienpoupa/rclone-backup) [![GitHub](https://img.shields.io/github/license/adrienpoupa/rclone-backup?label=License&logo=github)](https://github.com/AdrienPoupa/rclone-backup/blob/master/LICENSE)
 
-README | [中文文档](README_zh.md)
-
-Docker containers for [vaultwarden](https://github.com/dani-garcia/vaultwarden) (formerly known as **`bitwarden_rs`**) backup to remote.
-
-- [Docker Hub](https://hub.docker.com/r/ttionya/vaultwarden-backup)
-- [GitHub Packages](https://github.com/ttionya/vaultwarden-backup/pkgs/container/vaultwarden-backup)
-- [GitHub](https://github.com/ttionya/vaultwarden-backup)
-
-<br>
-
-
-
-## Rename
-
-**Unofficial Bitwarden compatible server written in Rust, formerly known as `bitwarden_rs`, renamed to `vaultwarden`.**
-
-For this reason, the backup tool was migrated to [ttionya/vaultwarden-backup](https://github.com/ttionya/vaultwarden-backup).
-
-The old image can still be used, just **DEPRECATED**. It is recommended to migrate to new image [ttionya/vaultwarden-backup](https://hub.docker.com/r/ttionya/vaultwarden-backup).
-
-**See how to migrate [here](#migration).**
-
-<br>
-
-
-
-## Feature
+Forked from [ttionya/vaultwarden-backup](https://github.com/ttionya/vaultwarden-backup).
 
 This tool supports backing up the following files or directories.
 
-- `db.sqlite3` (for SQLite database)
-- `db.dump` (for PostgreSQL database)
-- `db.sql` (for MySQL / MariaDB database)
-- `config.json`
-- `rsa_key*` (multiple files)
-- `attachments` (directory)
-- `sends` (directory)
+- Any directory you specify
+- SQLite databases
+- MySQL/MariaDB databases
+- PostgreSQL databases
 
 And the following ways of notifying backup results are supported.
 
 - Ping (only send on success)
 - Mail (SMTP based, send on success and on failure)
 
-<br>
-
-
-
 ## Usage
-
-> **Important:** We assume you already read the `vaultwarden` [documentation](https://github.com/dani-garcia/vaultwarden/wiki).
 
 ### Configure Rclone (⚠️ MUST READ ⚠️)
 
-> **For backup, you need to configure Rclone first, otherwise the backup tool will not work.**
-> 
-> **For restore, it is not necessary.**
+> **You need to configure Rclone first, otherwise the backup tool will not work.**
 
 We upload the backup files to the storage system by [Rclone](https://rclone.org/).
 
@@ -69,128 +32,42 @@ You can get the token by the following command.
 
 ```shell
 docker run --rm -it \
-  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \
-  ttionya/vaultwarden-backup:latest \
+  --mount type=volume,source=rclone-backup-data,target=/config/ \
+  adrienpoupa/rclone-backup:latest \
   rclone config
 ```
 
-**We recommend setting the remote name to `BitwardenBackup`, otherwise you need to specify the environment variable `RCLONE_REMOTE_NAME` as the remote name you set.**
+**We recommend setting the remote name to `RcloneBackup`, otherwise you need to specify the environment variable `RCLONE_REMOTE_NAME` as the remote name you set.**
 
 After setting, check the configuration content by the following command.
 
 ```shell
 docker run --rm -it \
-  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \
-  ttionya/vaultwarden-backup:latest \
+  --mount type=volume,source=rclone-backup-data,target=/config/ \
+  adrienpoupa/rclone-backup:latest \
   rclone config show
 
-# Microsoft Onedrive Example
-# [BitwardenBackup]
-# type = onedrive
-# token = {"access_token":"access token","token_type":"token type","refresh_token":"refresh token","expiry":"expiry time"}
-# drive_id = driveid
-# drive_type = personal
+# AWS S3 Example
+# [RcloneBackup]
+# type = s3
+# provider = AWS
+# access_key_id = <key>
+# secret_access_key = <key>
+# region = us-east-1
+# location_constraint = us-east-1
+# acl = private
+# server_side_encryption = AES256
+# storage_class = INTELLIGENT_TIERING
+# bucket_acl = private
+# no_check_bucket = true
 ```
-
-<br>
-
-
-
-### Backup
-
-#### Use Docker Compose (Recommend)
-
-If you are a new user or are rebuilding vaultwarden, it is recommended to use the `docker-compose.yml` from the project.
 
 Download `docker-compose.yml` to you machine, edit environment variables and start it.
 
 You need to go to the directory where the `docker-compose.yml` file is saved.
 
-```shell
-# Start
-docker-compose up -d
-
-# Stop
-docker-compose stop
-
-# Restart
-docker-compose restart
-
-# Remove
-docker-compose down
-```
-
-#### Automatic Backups
-
-If you have a running vaultwarden but don't want to use `docker-compose.yml`, we also provide a backup method for you.
-
-Make sure that your vaultwarden container is named `vaultwarden` otherwise you have to replace the container name in the `--volumes-from` section of the docker run call.
-
-By default the data folder for vaultwarden is `/data`, you need to explicitly specify the data folder using the environment variable `DATA_DIR`.
-
-Start the backup container with default settings. (automatic backup at 5 minute every hour)
-
-```shell
-docker run -d \
-  --restart=always \
-  --name vaultwarden_backup \
-  --volumes-from=vaultwarden \
-  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \
-  -e DATA_DIR="/data" \
-  ttionya/vaultwarden-backup:latest
-```
-
-<br>
-
-
-
-### Restore
-
-> **Important:** Restore will overwrite the existing files.
-
-You need to stop the Docker container before the restore.
-
-You also need to download the backup files to your local machine.
-
-Because the host's files are not accessible in the Docker container, you need to map the directory where the backup files that need to be restored are located to the docker container.
-
-**And go to the directory where your backup files to be restored are located.**
-
-If you use the `docker-compose.yml` provided with this project, you can use the following command.
-
-```shell
-docker run --rm -it \
-  --mount type=volume,source=vaultwarden-data,target=/bitwarden/data/ \
-  --mount type=bind,source=$(pwd),target=/bitwarden/restore/ \
-  ttionya/vaultwarden-backup:latest restore \
-  [OPTIONS]
-```
-
-If you are using "automatic backups", please confirm the vaultwarden volume and replace the `--mount` `source` section.
-
-Also don't forget to use the environment variable `DATA_DIR` to specify the data directory (`-e DATA_DIR="/data"`).
-
-```shell
-docker run --rm -it \
-  \ # If you are mapping the local folder to a docker container, like `vw-data`
-  --mount type=bind,source="the absolution path to your local folder",target=/data/ \
-  \ # If you are using docker volume
-  --mount type=volume,source="docker volume name",target=/data/ \
-  --mount type=bind,source=$(pwd),target=/bitwarden/restore/ \
-  -e DATA_DIR="/data" \
-  ttionya/vaultwarden-backup:latest restore \
-  [OPTIONS]
-```
-
-See [Options](#options) for options information.
 
 #### Options
-
-##### -f / --force-restore
-
-For restore without asking for confirmation.
-
-USE WITH CAUTION!!
 
 <details>
 <summary><strong>※ You have the compressed file named <code>backup</code></strong></summary>
@@ -211,34 +88,6 @@ If not, the password will be asked for interactively.
 
 </details>
 
-<details>
-<summary><strong>※ You have multiple independent backup files</strong></summary>
-
-##### --db-file \<file>
-
-You need to use this option to specify the `db.*` file.
-
-##### --config-file \<file>
-
-You need to use this option to specify the `config.json` file.
-
-##### --rsakey-file \<file>
-
-You need to use this option to specify the `rsakey.tar` file.
-
-##### --attachments-file \<file>
-
-You need to use this option to specify the `attachments.tar` file.
-
-##### --sends-file \<file>
-
-You need to use this option to specify the `sends.tar` file.
-
-</details>
-
-<br>
-
-
 
 ## Environment Variables
 
@@ -252,21 +101,21 @@ You can view the current remote name with the following command.
 
 ```shell
 docker run --rm -it \
-  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \
-  ttionya/vaultwarden-backup:latest \
+  --mount type=volume,source=rclone-backup-data,target=/config/ \
+  adrienpoupa/rclone-backup:latest \
   rclone config show
 
-# [BitwardenBackup] <- this
+# [RcloneBackup] <- this
 # ...
 ```
 
-Default: `BitwardenBackup`
+Default: `RcloneBackup`
 
 #### RCLONE_REMOTE_DIR
 
 The folder where backup files are stored in the storage system.
 
-Default: `/BitwardenBackup/`
+Default: `/RcloneBackup/`
 
 #### RCLONE_GLOBAL_FLAG
 
@@ -282,6 +131,33 @@ Schedule to run the backup script, based on [`supercronic`](https://github.com/a
 
 Default: `5 * * * *` (run the script at 5 minute every hour)
 
+#### DB_TYPE
+
+Database to back up, can be one of `sqlite`, `mysql` or `postgresql`.
+
+Default: `none` to disable.
+
+#### BACKUP_FOLDER_NAME
+
+Name of the folder to back up, eg `data`.
+
+Default: `data`
+
+#### BACKUP_FOLDER_PATH
+
+Path of the folder to back up, eg `/data`/
+
+Default: `/data`
+
+Multiple folders can be backed up by doing the following, with the same syntax as [multiple remotes](docs/multiple-remote-destinations.md):
+
+```
+BACKUP_FOLDER_NAME_1: first-folder
+BACKUP_FOLDER_PATH_1: /first
+BACKUP_FOLDER_NAME_2: second-folder
+BACKUP_FOLDER_PATH_2: /second
+```
+
 #### ZIP_ENABLE
 
 Pack all backup files into a compressed file. When set to `'FALSE'`, each backup file will be uploaded independently.
@@ -292,13 +168,11 @@ Default: `TRUE`
 
 The password for the compressed file. Note that the password will always be used when packing the backup files.
 
-Default: `WHEREISMYPASSWORD?`
+Default: `123456`
 
 #### ZIP_TYPE
 
 Because the `zip` format is less secure, we offer archives in `7z` format for those who seek security.
-
-It should be noted that the password for vaultwarden is encrypted before it is sent to the server. The server does not have plaintext passwords, so the `zip` format is good enough for basic encryption needs.
 
 Default: `zip` (only support `zip` and `7z` formats)
 
@@ -334,10 +208,6 @@ Use [healthcheck.io](https://healthchecks.io/) url or similar cron monitoring to
 
 #### MAIL_SMTP_ENABLE
 
-Starting from v1.19.0, we will be using [`s-nail`](https://www.sdaoden.eu/code-nail.html) instead of [`heirloom-mailx`](https://www.systutorials.com/docs/linux/man/1-heirloom-mailx/) to send emails.
-
-Please note that `heirloom-mailx` is a stub for `s-nail`, and most of its functionality is compatible. Therefore, you may not need to modify any environment variables for this change.
-
 Default: `FALSE`
 
 #### MAIL_SMTP_VARIABLES
@@ -360,7 +230,7 @@ During testing, we will add the `-v` option to display detailed information.
 -S from=<my-email-address>
 ```
 
-Console showing warnings? Check [issue #177](https://github.com/ttionya/vaultwarden-backup/issues/117#issuecomment-1691443179) for more details.
+Console showing warnings? Check [issue #177](https://github.com/AdrienPoupa/rclone-backup/issues/117#issuecomment-1691443179) for more details.
 
 #### MAIL_TO
 
@@ -377,14 +247,6 @@ Default: `TRUE`
 Sends an email when the backup fails.
 
 Default: `TRUE`
-
-#### DATA_DIR
-
-This folder stores the data of vaultwarden.
-
-When using `Docker Compose`, this does not need to be changed. However, when using automatic backup, you need to change it to `/data`.
-
-Default: `/bitwarden/data`
 
 <details>
 <summary><strong>※ Other environment variables</strong></summary>
@@ -414,34 +276,13 @@ Please use the [date man page](https://man7.org/linux/man-pages/man1/date.1.html
 
 Default: `''`
 
-#### DATA_DB
+#### SQLITE_DATABASE
 
-Set the path for the sqlite database file.
+Set the path for the SQLite database file.
 
-Default: `${DATA_DIR}/db.sqlite3`
-
-#### DATA_RSAKEY
-
-Set the path for the rsa_key file.
-
-Default: `${DATA_DIR}/rsa_key`
-
-#### DATA_ATTACHMENTS
-
-Set the path for the attachment folder.
-
-Default: `${DATA_DIR}/attachments`
-
-#### DATA_SENDS
-
-Set the path for the sends folder.
-
-Default: `${DATA_DIR}/sends`
+Default: `${BACKUP_FOLDER_PATH}/db.sqlite3`
 
 </details>
-
-<br>
-
 
 
 ## Using `.env` file
@@ -451,11 +292,8 @@ If you prefer using an env file instead of environment variables, you can map th
 ```shell
 docker run -d \
   --mount type=bind,source=/path/to/env,target=/.env \
-  ttionya/vaultwarden-backup:latest
+  adrienpoupa/rclone-backup:latest
 ```
-
-<br>
-
 
 
 ## Docker Secrets
@@ -465,50 +303,26 @@ As an alternative to passing sensitive information via environment variables, `_
 ```shell
 docker run -d \
   -e ZIP_PASSWORD_FILE=/run/secrets/zip-password \
-  ttionya/vaultwarden-backup:latest
+  adrienpoupa/rclone-backup:latest
 ```
-
-<br>
-
-
 
 ## About Priority
 
 We will use the environment variables first, followed by the contents of the file ending in `_FILE` as defined by the environment variables. Next, we will use the contents of the file ending in `_FILE` as defined in the `.env` file, and finally the values from the `.env` file itself.
-
-<br>
-
-
 
 ## Mail Test
 
 You can use the following command to test mail sending. Remember to replace your SMTP variables.
 
 ```shell
-docker run --rm -it -e MAIL_SMTP_VARIABLES='<your smtp variables>' ttionya/vaultwarden-backup:latest mail <mail send to>
+docker run --rm -it -e MAIL_SMTP_VARIABLES='<your smtp variables>' adrienpoupa/rclone-backup:latest mail <mail send to>
 
 # Or
 
-docker run --rm -it -e MAIL_SMTP_VARIABLES='<your smtp variables>' -e MAIL_TO='<mail send to>' ttionya/vaultwarden-backup:latest mail
+docker run --rm -it -e MAIL_SMTP_VARIABLES='<your smtp variables>' -e MAIL_TO='<mail send to>' adrienpoupa/rclone-backup:latest mail
 ```
 
-<br>
-
-
-
-## Migration
-
-If you use automatic backups, you just need to replace the image with `ttionya/vaultwarden-backup`. Note the name of your volume.
-
-If you are using `docker-compose`, you need to update `bitwardenrs/server` to `vaultwarden/server` and `ttionya/bitwardenrs-backup` to `ttionya/vaultwarden-backup`.
-
-We recommend re-downloading the `docker-compose.yml` file, replacing your environment variables, and noting the `volumes` section, which you may need to change.
-
-<br>
-
-
-
-## Advance
+## Advanced
 
 - [Run as non-root user](docs/run-as-non-root-user.md)
 - [Multiple remote destinations](docs/multiple-remote-destinations.md)
@@ -516,27 +330,9 @@ We recommend re-downloading the `docker-compose.yml` file, replacing your enviro
 - [Using the PostgreSQL backend](docs/using-the-postgresql-backend.md)
 - [Using the MySQL(MariaDB) backend](docs/using-the-mysql-or-mariadb-backend.md)
 
-<br>
-
-
-
 ## Changelog
 
 Check out the [CHANGELOG](CHANGELOG.md) file.
-
-<br>
-
-
-
-## Thanks
-
-I am grateful for the OSS license provided by [JetBrains](https://www.jetbrains.com/).
-
-<a href="https://jb.gg/OpenSourceSupport" target="_blank"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo (Main) logo" width="300"></a>
-
-<br>
-
-
 
 ## License
 

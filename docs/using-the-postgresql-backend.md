@@ -18,7 +18,7 @@ If the `postgresql*-client` is not updated promptly, please create an issue to i
 
 Set to `postgresql` switch to PostgreSQL database.
 
-Default: `sqlite`
+Default: `none`
 
 #### PG_HOST
 
@@ -34,13 +34,13 @@ Default: `5432`
 
 PostgreSQL database name.
 
-Default: `vaultwarden`
+Default: `database`
 
 #### PG_USERNAME
 
 PostgreSQL username.
 
-Default: `vaultwarden`
+Default: `root`
 
 #### PG_PASSWORD
 

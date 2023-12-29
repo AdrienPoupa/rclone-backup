@@ -12,7 +12,7 @@ Now supports MySQL(MariaDB) backend.
 
 Set to `mysql` switch to MySQL(MariaDB) database.
 
-Default: `sqlite`
+Default: `none`
 
 #### MYSQL_HOST
 
@@ -28,13 +28,13 @@ Default: `3306`
 
 MySQL(MariaDB) database name.
 
-Default: `vaultwarden`
+Default: `database`
 
 #### MYSQL_USERNAME
 
 MySQL(MariaDB) username.
 
-Default: `vaultwarden`
+Default: `root`
 
 #### MYSQL_PASSWORD
 

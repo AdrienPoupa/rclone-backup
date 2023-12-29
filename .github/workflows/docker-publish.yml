@@ -53,12 +53,10 @@ jobs:
           platforms: 'linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7'
           push: true
           tags: |
-            ttionya/vaultwarden-backup:latest
-            ttionya/vaultwarden-backup:${{ env.TAG }}
-            ttionya/bitwardenrs-backup:latest
-            ttionya/bitwardenrs-backup:${{ env.TAG }}
-            ghcr.io/ttionya/vaultwarden-backup:latest
-            ghcr.io/ttionya/vaultwarden-backup:${{ env.TAG }}
+            adrienpoupa/rclone-backup:latest
+            adrienpoupa/rclone-backup:${{ env.TAG }}
+            ghcr.io/adrienpoupa/rclone-backup:latest
+            ghcr.io/adrienpoupa/rclone-backup:${{ env.TAG }}
 
   publish-beta:
     name: Docker Publish Beta
@@ -95,7 +93,7 @@ jobs:
           platforms: 'linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7'
           push: true
           tags: |
-            ttionya/vaultwarden-backup:${{ env.TAG }}
+            adrienpoupa/rclone-backup:${{ env.TAG }}
 
   publish-schedule:
     name: Docker Publish Schedule
@@ -150,9 +148,7 @@ jobs:
           platforms: 'linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7'
           push: true
           tags: |
-            ttionya/vaultwarden-backup:latest
-            ttionya/vaultwarden-backup:${{ env.TAG }}
-            ttionya/bitwardenrs-backup:latest
-            ttionya/bitwardenrs-backup:${{ env.TAG }}
-            ghcr.io/ttionya/vaultwarden-backup:latest
-            ghcr.io/ttionya/vaultwarden-backup:${{ env.TAG }}
+            adrienpoupa/rclone-backup:latest
+            adrienpoupa/rclone-backup:${{ env.TAG }}
+            ghcr.io/adrienpoupa/rclone-backup:latest
+            ghcr.io/adrienpoupa/rclone-backup:${{ env.TAG }}

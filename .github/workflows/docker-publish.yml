@@ -3,7 +3,7 @@ name: 'Docker Publish'
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - '*.*.*'
   schedule:
     - cron: '0 0 10,20,30 * *'
 

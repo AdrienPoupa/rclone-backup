@@ -12,7 +12,7 @@ You can achieve this by setting the following environment variables.
 
 > **Don't forget to add the new Rclone remote before running with the new environment variables.**
 > 
-> Find more information on how to configure Rclone [here](https://github.com/ttionya/vaultwarden-backup#configure-rclone-%EF%B8%8F-must-read-%EF%B8%8F).
+> Find more information on how to configure Rclone [here](https://github.com/AdrienPoupa/rclone-backup#configure-rclone-%EF%B8%8F-must-read-%EF%B8%8F).
 
 To set additional remote destinations, use the environment variables `RCLONE_REMOTE_NAME_N` and `RCLONE_REMOTE_DIR_N`, where:
 
@@ -31,14 +31,14 @@ Note that if the serial number is not consecutive or the value is empty, the scr
 ...
 environment:
   # they have default values
-  # RCLONE_REMOTE_NAME: BitwardenBackup
-  # RCLONE_REMOTE_DIR: /BitwardenBackup/
+  # RCLONE_REMOTE_NAME: RcloneBackup
+  # RCLONE_REMOTE_DIR: /RcloneBackup/
   RCLONE_REMOTE_NAME_1: extraRemoteName1
   RCLONE_REMOTE_DIR_1: extraRemoteDir1
 ...
 ```
 
-With the above example, both remote destinations are available: `BitwardenBackup:/BitwardenBackup/` and `extraRemoteName1:extraRemoteDir1`.
+With the above example, both remote destinations are available: `RcloneBackup:/RcloneBackup/` and `extraRemoteName1:extraRemoteDir1`.
 
 <br>
 

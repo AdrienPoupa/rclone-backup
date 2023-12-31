@@ -21,17 +21,7 @@ if [[ "$1" == "mail" ]]; then
         MAIL_TO="$2"
     fi
 
-    send_mail "vaultwarden Backup Test" "Your SMTP looks configured correctly."
-
-    exit 0
-fi
-
-# restore
-if [[ "$1" == "restore" ]]; then
-    . /app/restore.sh
-
-    shift
-    restore $*
+    send_mail "Backup Test" "Your SMTP looks configured correctly."
 
     exit 0
 fi

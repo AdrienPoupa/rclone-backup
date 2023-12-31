@@ -10,14 +10,14 @@ You can use the built-in non-root user and group, named `backuptool`, with the U
 
 ## Backup
 
-1. Make sure that the rclone config file in the mounted `vaultwarden-rclone-data` volume is writable by `backuptool` user.
+1. Make sure that the rclone config file in the mounted `rclone-backup-data` volume is writable by `backuptool` user.
 
 ```shell
 # enter the container
 docker run --rm -it \
-  --mount type=volume,source=vaultwarden-rclone-data,target=/config/ \
+  --mount type=volume,source=rclone-backup-data,target=/config/ \
   --entrypoint=bash \
-  ttionya/vaultwarden-backup:latest
+  adrienpoupa/rclone-backup:latest
 
 # modify the rclone config file owner in the container
 chown -R 1100:1100 /config/
@@ -33,12 +33,12 @@ exit
 ```shell
 # enter the container
 docker run --rm -it \
-  --mount type=volume,source=vaultwarden-data,target=/bitwarden/data/ \
+  --mount type=volume,source=rclone-backup-data,target=/data/ \
   --entrypoint=bash \
-  ttionya/vaultwarden-backup:latest
+  adrienpoupa/rclone-backup:latest
 
 # make files readable for all users in the container
-chmod -R +r /bitwarden/data/
+chmod -R +r /data/
 
 # exit the container
 exit
@@ -49,9 +49,9 @@ exit
 ```shell
 # enter the container
 docker run --rm -it \
-  --volumes-from=vaultwarden \
+  --volumes-from=your-container \
   --entrypoint=bash \
-  ttionya/vaultwarden-backup:latest
+  adrienpoupa/rclone-backup:latest
 
 # make files readable for all users in the container
 chmod -R +r /data/
@@ -68,7 +68,7 @@ exit
 # docker-compose.yml
 services:
   backup:
-    image: ttionya/vaultwarden-backup:latest
+    image: adrienpoupa/rclone-backup:latest
     user: 'backuptool:backuptool'
     ...
 ```
@@ -80,7 +80,7 @@ docker run -d \
   ...
   --user backuptool:backuptool \
   ...
-  ttionya/vaultwarden-backup:latest
+  adrienpoupa/rclone-backup:latest
 ```
 
 <br>

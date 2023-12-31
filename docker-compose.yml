@@ -3,26 +3,26 @@ version: '3.4'
 services:
 
   vaultwarden:
-    image: vaultwarden/server:latest
-    restart: always
-    # environment:
-    #   SIGNUPS_ALLOWED: 'false'
-    #   ADMIN_TOKEN: 'your authentication token'
+    image: service:latest
     ports:
       - '127.0.0.1:8200:80'
     volumes:
-      - vaultwarden-data:/data/
+      - service-data:/data
+      - service-database:/database
 
   backup:
-    image: ttionya/vaultwarden-backup:latest
-    restart: always
+    image: adrienpoupa/rclone-backup:latest
     # environment:
-    #   RCLONE_REMOTE_NAME: 'BitwardenBackup'
-    #   RCLONE_REMOTE_DIR: '/BitwardenBackup/'
+    #   RCLONE_REMOTE_NAME: 'RcloneBackup'
+    #   RCLONE_REMOTE_DIR: '/RcloneBackup/'
     #   RCLONE_GLOBAL_FLAG: ''
     #   CRON: '5 * * * *'
+    #   BACKUP_FOLDER_NAME: 'data'
+    #   BACKUP_FOLDER_PATH: '/data'
+    #   DB_TYPE: 'sqlite'
+    #   SQLITE_DATABASE: '/database/database.sqlite'
     #   ZIP_ENABLE: 'TRUE'
-    #   ZIP_PASSWORD: 'WHEREISMYPASSWORD?'
+    #   ZIP_PASSWORD: '123456'
     #   ZIP_TYPE: 'zip'
     #   BACKUP_FILE_SUFFIX: '%Y%m%d'
     #   BACKUP_KEEP_DAYS: 0
@@ -34,21 +34,9 @@ services:
     #   MAIL_WHEN_FAILURE: 'TRUE'
     #   TIMEZONE: 'UTC'
     volumes:
-      - vaultwarden-data:/bitwarden/data/
-      - vaultwarden-rclone-data:/config/
-    #   - /path/to/env:/.env
+      - rclone-backup-data:/config
 
 volumes:
-  vaultwarden-data:
-    # Specify the name of the volume where you save the vaultwarden data,
-    # use vaultwarden-data for new users
-    # and bitwardenrs-data for migrated users
-    name: vaultwarden-data
-    # name: bitwardenrs-data
-  vaultwarden-rclone-data:
-    external: true
-    # Specify the name of the volume where you save the rclone configuration,
-    # use vaultwarden-rclone-data for new users
-    # and bitwardenrs-rclone-data for migrated users
-    name: vaultwarden-rclone-data
-    # name: bitwardenrs-rclone-data
+  service-data:
+  service-database:
+  rclone-backup-data:

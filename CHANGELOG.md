@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- First release based on https://github.com/ttionya/vaultwarden-backup
+## [1.0.1] - 2023-12-31
 
-## [1.0.0] - TBD
+- fix(backup): Fix Backed up files list
+
+## [1.0.0] - 2023-12-30
+
+- First release based on https://github.com/ttionya/vaultwarden-backup

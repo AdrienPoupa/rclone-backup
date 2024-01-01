@@ -34,7 +34,7 @@ function backup_folders() {
 
             color blue "Backed up files:"
 
-            tar -tf "${BACKUP_FOLDER_NAME}"
+            tar -tf "${BACKUP_FILE}"
         else
             color yellow "${BACKUP_FOLDER_PATH} does not exist, skipping"
         fi

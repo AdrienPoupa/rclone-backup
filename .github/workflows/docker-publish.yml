@@ -11,8 +11,8 @@ permissions:
   packages: write
 
 jobs:
-  publish-stable:
-    name: Docker Publish
+  publish-tag:
+    name: Docker Publish Tag
     runs-on: ubuntu-latest
     if: ${{ github.ref != 'refs/heads/master' && !contains(github.ref, '-') }}
     steps:

@@ -1,11 +1,11 @@
-name: 'Docker Publish'
+name: Docker Publish
 
 on:
   push:
+    branches:
+      - master
     tags:
-      - '*.*.*'
-  schedule:
-    - cron: '0 0 10,20,30 * *'
+      - "*.*.*"
 
 permissions:
   packages: write
@@ -13,142 +13,103 @@ permissions:
 jobs:
   publish-stable:
     name: Docker Publish
-
     runs-on: ubuntu-latest
-
-    if: ${{ github.event_name != 'schedule' && !contains(github.ref, '-') }}
-
+    if: ${{ github.ref != 'refs/heads/master' && !contains(github.ref, '-') }}
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v4
-      -
-        name: Prepare
+      - name: Prepare
         run: echo "TAG=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      -
-        name: Login to DockerHub
+      - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Login to ghcr.io
+      - name: Login to ghcr.io
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: Build and push
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: '.'
-          file: './Dockerfile'
-          platforms: 'linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7'
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
           push: true
           tags: |
-            adrienpoupa/rclone-backup:latest
             adrienpoupa/rclone-backup:${{ env.TAG }}
-            ghcr.io/adrienpoupa/rclone-backup:latest
             ghcr.io/adrienpoupa/rclone-backup:${{ env.TAG }}
 
   publish-beta:
     name: Docker Publish Beta
-
     runs-on: ubuntu-latest
-
-    if: ${{ github.event_name != 'schedule' && contains(github.ref, '-') }}
-
+    if: ${{ github.ref != 'refs/heads/master' && contains(github.ref, '-') }}
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v4
-      -
-        name: Prepare
+      - name: Prepare
         run: echo "TAG=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      -
-        name: Login to DockerHub
+      - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: '.'
-          file: './Dockerfile'
-          platforms: 'linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7'
-          push: true
-          tags: |
-            adrienpoupa/rclone-backup:${{ env.TAG }}
-
-  publish-schedule:
-    name: Docker Publish Schedule
-
-    runs-on: ubuntu-latest
-
-    if: ${{ github.event_name == 'schedule' }}
-
-    steps:
-      -
-        name: Get Tag
-        id: tag
-        uses: pozetroninc/github-action-get-latest-release@v0.8.0
-        with:
-          repository: ${{ github.repository }}
-          excludes: prerelease, draft
-      -
-        name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: refs/tags/${{ steps.tag.outputs.release }}
-      -
-        name: Prepare
-        run: |
-          TAG=${{ steps.tag.outputs.release }}
-          echo "TAG=${TAG#v}" >> $GITHUB_ENV
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Login to ghcr.io
+      - name: Login to ghcr.io
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: Build and push
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: '.'
-          file: './Dockerfile'
-          platforms: 'linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7'
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
+          push: true
+          tags: |
+            adrienpoupa/rclone-backup:${{ env.TAG }}
+            ghcr.io/adrienpoupa/rclone-backup:${{ env.TAG }}
+
+  publish-latest:
+    name: Docker Publish Latest
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/master' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
           push: true
           tags: |
             adrienpoupa/rclone-backup:latest
-            adrienpoupa/rclone-backup:${{ env.TAG }}
             ghcr.io/adrienpoupa/rclone-backup:latest
-            ghcr.io/adrienpoupa/rclone-backup:${{ env.TAG }}

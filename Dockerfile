@@ -1,26 +1,4 @@
-FROM rclone/rclone:1.68.2 AS provider
-
-# To address the issue of dependencies in Alpine's edge version being required while rclone is not yet updated.
-# https://github.com/rclone/rclone/blob/master/Dockerfile
-FROM alpine:latest AS base
-
-RUN apk --no-cache add ca-certificates fuse3 tzdata && \
-  echo "user_allow_other" >> /etc/fuse.conf
-
-COPY --from=provider /usr/local/bin/rclone /usr/local/bin/
-
-RUN addgroup -g 1009 rclone && adduser -u 1009 -Ds /bin/sh -G rclone rclone
-
-ENTRYPOINT [ "rclone" ]
-
-WORKDIR /data
-ENV XDG_CONFIG_HOME=/config
-
-FROM base
-
-LABEL "repository"="https://github.com/AdrienPoupa/rclone-backup" \
-  "homepage"="https://github.com/AdrienPoupa/rclone-backup" \
-  "maintainer"="Adrien Poupa <git@poupa.net>"
+FROM rclone/rclone:1.68.2
 
 ARG USER_NAME="backuptool"
 ARG USER_ID="1100"

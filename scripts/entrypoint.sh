@@ -12,6 +12,7 @@ fi
 # mail test
 if [[ "$1" == "mail" ]]; then
     export_env_file
+    init_env_display
     init_env_mail
 
     MAIL_SMTP_ENABLE="TRUE"
@@ -21,7 +22,20 @@ if [[ "$1" == "mail" ]]; then
         MAIL_TO="$2"
     fi
 
-    send_mail "Backup Test" "Your SMTP looks configured correctly."
+    send_mail "${DISPLAY_NAME} Backup Test" "Your SMTP looks configured correctly."
+
+    exit 0
+fi
+
+# ping test
+if [[ "$1" == "ping" ]]; then
+    export_env_file
+    init_env_display
+    init_env_ping
+
+    PING_DEBUG="TRUE"
+
+    send_ping "$2" "${DISPLAY_NAME} Backup Test" "Your PING configuration looks correct."
 
     exit 0
 fi
@@ -38,7 +52,7 @@ function configure_cron() {
 }
 
 init_env
-check_rclone_connection
+check_rclone_connection all
 configure_postgresql
 configure_timezone
 configure_cron

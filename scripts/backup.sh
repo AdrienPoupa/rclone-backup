@@ -58,7 +58,7 @@ function backup_db_postgresql() {
     if [[ $? != 0 ]]; then
         color red "Backup PostgreSQL database failed"
 
-        send_mail_content "FALSE" "Backup failed at $(date +"%Y-%m-%d %H:%M:%S %Z"). Reason: Backup postgresql database failed."
+        send_notification "failure" "Backup failed at $(date +"%Y-%m-%d %H:%M:%S %Z"). Reason: Backup postgresql database failed."
 
         exit 1
     fi
@@ -67,11 +67,28 @@ function backup_db_postgresql() {
 function backup_db_mysql() {
     color blue "Backup MySQL database"
 
-    mariadb-dump -h "${MYSQL_HOST}" -P "${MYSQL_PORT}" -u "${MYSQL_USERNAME}" -p"${MYSQL_PASSWORD}" "${MYSQL_DATABASE}" > "${BACKUP_FILE_DB_MYSQL}"
+    local EXTRA_OPTIONS=()
+    if [[ -n "${MYSQL_SSL}" ]]; then
+        EXTRA_OPTIONS+=("--ssl=\"${MYSQL_SSL}\"")
+    fi
+    if [[ -n "${MYSQL_SSL_VERIFY_SERVER_CERT}" ]]; then
+        EXTRA_OPTIONS+=("--ssl-verify-server-cert=\"${MYSQL_SSL_VERIFY_SERVER_CERT}\"")
+    fi
+    if [[ -n "${MYSQL_SSL_CA}" ]]; then
+        EXTRA_OPTIONS+=("--ssl-ca=\"${MYSQL_SSL_CA}\"")
+    fi
+    if [[ -n "${MYSQL_SSL_CERT}" ]]; then
+        EXTRA_OPTIONS+=("--ssl-cert=\"${MYSQL_SSL_CERT}\"")
+    fi
+    if [[ -n "${MYSQL_SSL_KEY}" ]]; then
+        EXTRA_OPTIONS+=("--ssl-key=\"${MYSQL_SSL_KEY}\"")
+    fi
+
+    eval "mariadb-dump -h \"${MYSQL_HOST}\" -P \"${MYSQL_PORT}\" -u \"${MYSQL_USERNAME}\" -p\"${MYSQL_PASSWORD}\" ${EXTRA_OPTIONS[@]} \"${MYSQL_DATABASE}\" > \"${BACKUP_FILE_DB_MYSQL}\""
     if [[ $? != 0 ]]; then
         color red "Backup MySQL database failed"
 
-        send_mail_content "FALSE" "Backup failed at $(date +"%Y-%m-%d %H:%M:%S %Z"). Reason: Backup mysql database failed."
+        send_notification "failure" "Backup failed at $(date +"%Y-%m-%d %H:%M:%S %Z"). Reason: Backup mysql database failed."
 
         exit 1
     fi
@@ -120,7 +137,7 @@ function upload() {
     if [[ ! -e "${UPLOAD_FILE}" ]]; then
         color red "Upload file not found"
 
-        send_mail_content "FALSE" "File upload failed at $(date +"%Y-%m-%d %H:%M:%S %Z"). Reason: Upload file not found."
+        send_notification "failure" "File upload failed at $(date +"%Y-%m-%d %H:%M:%S %Z"). Reason: Upload file not found."
 
         exit 1
     fi
@@ -141,7 +158,7 @@ function upload() {
     done
 
     if [[ "${HAS_ERROR}" == "TRUE" ]]; then
-        send_mail_content "FALSE" "File upload failed at $(date +"%Y-%m-%d %H:%M:%S %Z")."
+        end_notification "failure" "File upload failed at $(date +"%Y-%m-%d %H:%M:%S %Z")."
 
         exit 1
     fi
@@ -171,7 +188,10 @@ function clear_history() {
 color blue "Running the backup program at $(date +"%Y-%m-%d %H:%M:%S %Z")"
 
 init_env
-check_rclone_connection
+
+send_notification "start" "Start backup at $(date +"%Y-%m-%d %H:%M:%S %Z")"
+
+check_rclone_connection any
 
 clear_dir
 backup_init
@@ -181,7 +201,6 @@ upload
 clear_dir
 clear_history
 
-send_mail_content "TRUE" "The file was successfully uploaded at $(date +"%Y-%m-%d %H:%M:%S %Z")."
-send_ping
+send_notification "success" "The file was successfully uploaded at $(date +"%Y-%m-%d %H:%M:%S %Z")."
 
 color none ""

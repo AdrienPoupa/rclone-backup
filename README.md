@@ -330,6 +330,62 @@ docker run --rm -it -e MAIL_SMTP_VARIABLES='<your smtp variables>' -e MAIL_TO='<
 
 <br>
 
+### Discord Notifications
+
+You can receive backup status notifications on Discord using a Webhook URL.
+
+| Environment Variable  | Default Value | Description                                                                                                                               |
+| --------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `DISCORD_WEBHOOK_URL` |               | Your Discord Webhook URL. [How to create a Discord Webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks).    |
+| `DISCORD_ENABLED`     | `FALSE`       | Set to `TRUE` to enable Discord notifications. If the Webhook URL is provided, it defaults to `TRUE` unless explicitly set to `FALSE`. |
+| `NOTIFY_DEBUG`        | `FALSE`       | Set to `TRUE` to print the JSON payload sent to Discord. Useful for troubleshooting.                                                      |
+
+Your `DISPLAY_NAME` will be used as the username for the bot sending the message, and also in the title of the notification embed.
+
+#### Discord Test
+
+You can test Discord notifications using the following command. This will send a "test" status notification.
+Remember to replace `<your_discord_webhook_url>` with your actual Discord webhook URL.
+
+```shell
+docker run --rm -it \
+  -e DISPLAY_NAME="My Backup Test" \
+  -e DISCORD_WEBHOOK_URL='<your_discord_webhook_url>' \
+  -e DISCORD_ENABLED='TRUE' \
+  -e NOTIFY_DEBUG='TRUE' \
+  adrienpoupa/rclone-backup:latest notification test "This is a test message for Discord."
+```
+
+<br>
+
+### Slack Notifications
+
+You can receive backup status notifications on Slack using an Incoming Webhook URL.
+
+| Environment Variable | Default Value | Description                                                                                                                              |
+| -------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `SLACK_WEBHOOK_URL`  |               | Your Slack Incoming Webhook URL. [How to create a Slack Incoming Webhook](https://api.slack.com/messaging/webhooks).                     |
+| `SLACK_ENABLED`      | `FALSE`       | Set to `TRUE` to enable Slack notifications. If the Webhook URL is provided, it defaults to `TRUE` unless explicitly set to `FALSE`.    |
+| `NOTIFY_DEBUG`       | `FALSE`       | Set to `TRUE` to print the JSON payload sent to Slack. Useful for troubleshooting.                                                       |
+
+Your `DISPLAY_NAME` will be used in the title of the notification attachment.
+
+#### Slack Test
+
+You can test Slack notifications using the following command. This will send a "test" status notification.
+Remember to replace `<your_slack_webhook_url>` with your actual Slack webhook URL.
+
+```shell
+docker run --rm -it \
+  -e DISPLAY_NAME="My Backup Test" \
+  -e SLACK_WEBHOOK_URL='<your_slack_webhook_url>' \
+  -e SLACK_ENABLED='TRUE' \
+  -e NOTIFY_DEBUG='TRUE' \
+  adrienpoupa/rclone-backup:latest notification test "This is a test message for Slack."
+```
+
+<br>
+
 ## Environment Variables Considerations
 
 ### Using `.env` file

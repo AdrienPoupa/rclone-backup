@@ -17,7 +17,7 @@ jobs:
     if: ${{ github.ref != 'refs/heads/master' && !contains(github.ref, '-') }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Prepare
         run: echo "TAG=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
       - name: Set up QEMU
@@ -52,7 +52,7 @@ jobs:
     if: ${{ github.ref != 'refs/heads/master' && contains(github.ref, '-') }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Prepare
         run: echo "TAG=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
       - name: Set up QEMU
@@ -87,7 +87,7 @@ jobs:
     if: ${{ github.ref == 'refs/heads/master' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx

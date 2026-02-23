@@ -164,7 +164,7 @@ Default: `TRUE`
 
 #### ZIP_PASSWORD
 
-The password for the compressed file. Note that the password will always be used when packing the backup files.
+The password for the compressed file. Note that the password will always be used when packing the backup files. Set to `""` to disable.
 
 Default: `123456`
 

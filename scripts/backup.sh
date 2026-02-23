@@ -114,17 +114,22 @@ function backup_package() {
 
         UPLOAD_FILE="${BACKUP_FILE_ZIP}"
 
+        local password_opt=""
+        if [[ -n "${ZIP_PASSWORD}" ]]; then
+            password_opt="-p${ZIP_PASSWORD}"
+        fi
+
         if [[ "${ZIP_TYPE}" == "zip" ]]; then
-            7z a -tzip -mx=9 -p"${ZIP_PASSWORD}" "${BACKUP_FILE_ZIP}" "${BACKUP_DIR}"/*
+            7z a -tzip -mx=9 ${password_opt} "${BACKUP_FILE_ZIP}" "${BACKUP_DIR}"/*
         else
-            7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on -mhe=on -p"${ZIP_PASSWORD}" "${BACKUP_FILE_ZIP}" "${BACKUP_DIR}"/*
+            7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on -mhe=on ${password_opt} "${BACKUP_FILE_ZIP}" "${BACKUP_DIR}"/*
         fi
 
         ls -lah "${BACKUP_DIR}"
 
         color blue "Display backup ${ZIP_TYPE} file list"
 
-        7z l -p"${ZIP_PASSWORD}" "${BACKUP_FILE_ZIP}"
+        7z l ${password_opt} "${BACKUP_FILE_ZIP}"
     else
         color yellow "Skipped package backup files"
 

@@ -363,12 +363,18 @@ function init_env() {
 
     # RCLONE_REMOTE_NAME
     get_env RCLONE_REMOTE_NAME
-    RCLONE_REMOTE_NAME="${RCLONE_REMOTE_NAME:-"RcloneBackup"}"
+    # Only apply default if no explicit value and no multiple remotes configured starting from _1
+    if [[ -z "${RCLONE_REMOTE_NAME}" && -z "${RCLONE_REMOTE_NAME_1:-}" && -z "${DOTENV_RCLONE_REMOTE_NAME_1:-}" ]]; then
+        RCLONE_REMOTE_NAME="RcloneBackup"
+    fi
     RCLONE_REMOTE_NAME_0="${RCLONE_REMOTE_NAME}"
 
     # RCLONE_REMOTE_DIR
     get_env RCLONE_REMOTE_DIR
-    RCLONE_REMOTE_DIR="${RCLONE_REMOTE_DIR:-"/RcloneBackup/"}"
+    # Only apply default if no explicit value and no multiple remotes configured starting from _1
+    if [[ -z "${RCLONE_REMOTE_DIR}" && -z "${RCLONE_REMOTE_DIR_1:-}" && -z "${DOTENV_RCLONE_REMOTE_DIR_1:-}" ]]; then
+        RCLONE_REMOTE_DIR="/RcloneBackup/"
+    fi
     RCLONE_REMOTE_DIR_0="${RCLONE_REMOTE_DIR}"
 
     # get RCLONE_REMOTE_LIST

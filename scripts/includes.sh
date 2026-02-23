@@ -429,6 +429,11 @@ function get_rclone_remote_list() {
         get_env "${RCLONE_REMOTE_DIR_X_REFER}"
 
         if [[ -z "${!RCLONE_REMOTE_NAME_X_REFER}" || -z "${!RCLONE_REMOTE_DIR_X_REFER}" ]]; then
+            # Skip empty first entry (index 0) and continue to numbered remotes (1, 2, ...)
+            if [[ ${i} -eq 0 && ${#RCLONE_REMOTE_LIST[@]} -eq 0 ]]; then
+                ((i++))
+                continue
+            fi
             break
         fi
 
@@ -462,6 +467,11 @@ function get_backup_folder_list() {
         get_env "${BACKUP_FOLDER_PATH_X_REFER}"
 
         if [[ -z "${!BACKUP_FOLDER_NAME_X_REFER}" || -z "${!BACKUP_FOLDER_PATH_X_REFER}" ]]; then
+            # Skip empty first entry (index 0) and continue to numbered folders (1, 2, ...)
+            if [[ ${i} -eq 0 && ${#BACKUP_FOLDER_LIST[@]} -eq 0 ]]; then
+                ((i++))
+                continue
+            fi
             break
         fi
 
@@ -491,6 +501,13 @@ function init_env() {
     # CRON
     get_env CRON
     CRON="${CRON:-"5 * * * *"}"
+
+    # Validate that RCLONE_REMOTE_NAME_0 and RCLONE_REMOTE_DIR_0 are not explicitly defined
+    if [[ -n "${RCLONE_REMOTE_NAME_0:-}" ]] || [[ -n "${RCLONE_REMOTE_DIR_0:-}" ]]; then
+        color red "RCLONE_REMOTE_NAME_0 and RCLONE_REMOTE_DIR_0 are reserved for internal use"
+        color blue "Please use RCLONE_REMOTE_NAME and RCLONE_REMOTE_DIR, or use numbered remotes (RCLONE_REMOTE_NAME_1, RCLONE_REMOTE_NAME_2, etc.)"
+        exit 1
+    fi
 
     # RCLONE_REMOTE_NAME
     get_env RCLONE_REMOTE_NAME
@@ -588,14 +605,27 @@ function init_env() {
 
     color yellow "========================================"
 
+    # Validate that BACKUP_FOLDER_NAME_0 and BACKUP_FOLDER_PATH_0 are not explicitly defined
+    if [[ -n "${BACKUP_FOLDER_NAME_0:-}" ]] || [[ -n "${BACKUP_FOLDER_PATH_0:-}" ]]; then
+        color red "BACKUP_FOLDER_NAME_0 and BACKUP_FOLDER_PATH_0 are reserved for internal use"
+        color blue "Please use BACKUP_FOLDER_NAME and BACKUP_FOLDER_PATH, or use numbered folders (BACKUP_FOLDER_NAME_1, BACKUP_FOLDER_NAME_2, etc.)"
+        exit 1
+    fi
+
     # BACKUP_FOLDER_NAME
     get_env BACKUP_FOLDER_NAME
-    BACKUP_FOLDER_NAME="${BACKUP_FOLDER_NAME:-"data"}"
+    # Only apply default if no explicit value and no multiple folders configured starting from _1
+    if [[ -z "${BACKUP_FOLDER_NAME}" && -z "${BACKUP_FOLDER_NAME_1:-}" && -z "${DOTENV_BACKUP_FOLDER_NAME_1:-}" ]]; then
+        BACKUP_FOLDER_NAME="data"
+    fi
     BACKUP_FOLDER_NAME_0="${BACKUP_FOLDER_NAME}"
 
     # BACKUP_FOLDER_PATH
     get_env BACKUP_FOLDER_PATH
-    BACKUP_FOLDER_PATH="${BACKUP_FOLDER_PATH:-"/data/"}"
+    # Only apply default if no explicit value and no multiple folders configured starting from _1
+    if [[ -z "${BACKUP_FOLDER_PATH}" && -z "${BACKUP_FOLDER_PATH_1:-}" && -z "${DOTENV_BACKUP_FOLDER_PATH_1:-}" ]]; then
+        BACKUP_FOLDER_PATH="/data/"
+    fi
     BACKUP_FOLDER_PATH_0="${BACKUP_FOLDER_PATH}"
 
     # get BACKUP_FOLDER_LIST

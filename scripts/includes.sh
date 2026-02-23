@@ -176,6 +176,113 @@ function send_ping() {
     fi
 }
 
+########################################
+# Send Discord notification.
+# Arguments:
+#     status
+#     message
+# Outputs:
+#     send discord notification result
+########################################
+function send_discord_notification() {
+    if [[ -z "${DISCORD_WEBHOOK_URL}" ]]; then
+        color red "Discord webhook URL not set, skipping notification"
+        return 1
+    fi
+
+    local status="$1"
+    local message="$2"
+    local title=""
+
+    case "${status}" in
+        start) title="${DISPLAY_NAME} Backup Start" ;;
+        success) title="${DISPLAY_NAME} Backup Success" ;;
+        failure) title="${DISPLAY_NAME} Backup Failed" ;;
+        *) title="${DISPLAY_NAME} Backup Notification" ;;
+    esac
+
+    local color_code=0
+    if [[ "${status}" == "success" ]]; then
+        color_code=5763719 # Green
+    elif [[ "${status}" == "failure" ]]; then
+        color_code=15548997 # Red
+    elif [[ "${status}" == "start" ]]; then
+        color_code=3447003 # Blue
+    else # Default info/grey
+        color_code=10070709
+    fi
+
+    # JSON needs to be carefully escaped for shell and curl
+    # Using printf for safer variable expansion and quoting
+    local json_payload
+    json_payload=$(printf '{"username": "%s", "embeds": [{"title": "%s", "description": "%s", "color": %d, "timestamp": "%s"}]}' \
+        "${DISPLAY_NAME} Backup" \
+        "${title}" \
+        "$(echo "${message}" | sed 's/"/\\"/g' | sed "s/'/\\'/g" | sed 's/\\/\\\\/g' | sed 's/\n/\\n/g')" \
+        "${color_code}" \
+        "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)")
+
+
+    if [[ "${NOTIFY_DEBUG}" == "TRUE" ]]; then
+        color yellow "Discord JSON payload: ${json_payload}"
+    fi
+
+    curl --connect-timeout 10 --max-time 15 -H "Content-Type: application/json" -X POST -d "${json_payload}" "${DISCORD_WEBHOOK_URL}"
+    if [[ $? != 0 ]]; then
+        color red "Error when sending Discord notification"
+    else
+        color blue "Discord notification sent successfully"
+    fi
+}
+
+########################################
+# Send Slack notification.
+# Arguments:
+#     status
+#     message
+# Outputs:
+#     send slack notification result
+########################################
+function send_slack_notification() {
+    if [[ -z "${SLACK_WEBHOOK_URL}" ]]; then
+        color red "Slack webhook URL not set, skipping notification"
+        return 1
+    fi
+
+    local status="$1"
+    local message="$2"
+    local title=""
+    local color_hex="#9E9E9E" # Default grey
+
+    case "${status}" in
+        start) title="${DISPLAY_NAME} Backup Start"; color_hex="#2196F3" ;; # Blue
+        success) title="${DISPLAY_NAME} Backup Success"; color_hex="#4CAF50" ;; # Green
+        failure) title="${DISPLAY_NAME} Backup Failed"; color_hex="#F44336" ;; # Red
+        *) title="${DISPLAY_NAME} Backup Notification" ;;
+    esac
+
+    # JSON needs to be carefully escaped for shell and curl
+    # Using printf for safer variable expansion and quoting
+    local json_payload
+    json_payload=$(printf '{"attachments": [{"fallback": "%s: %s", "title": "%s", "text": "%s", "color": "%s", "ts": %s}]}' \
+        "${title}" \
+        "$(echo "${message}" | sed 's/"/\\"/g' | sed "s/'/\\'/g" | sed 's/\\/\\\\/g' | sed 's/\n/\\n/g')" \
+        "${title}" \
+        "$(echo "${message}" | sed 's/"/\\"/g' | sed "s/'/\\'/g" | sed 's/\\/\\\\/g' | sed 's/\n/\\n/g')" \
+        "${color_hex}" \
+        "$(date +%s)")
+
+    if [[ "${NOTIFY_DEBUG}" == "TRUE" ]]; then
+        color yellow "Slack JSON payload: ${json_payload}"
+    fi
+
+    curl --connect-timeout 10 --max-time 15 -H "Content-Type: application/json" -X POST -d "${json_payload}" "${SLACK_WEBHOOK_URL}"
+    if [[ $? != 0 ]]; then
+        color red "Error when sending Slack notification"
+    else
+        color blue "Slack notification sent successfully"
+    fi
+}
 
 ########################################
 # Send notification.
@@ -192,6 +299,14 @@ function send_notification() {
         start)
             # ping
             send_ping "start" "${SUBJECT_START}" "$2"
+            # discord
+            if [[ "${DISCORD_ENABLED}" == "TRUE" ]]; then
+                send_discord_notification "start" "$2"
+            fi
+            # slack
+            if [[ "${SLACK_ENABLED}" == "TRUE" ]]; then
+                send_slack_notification "start" "$2"
+            fi
             ;;
         success)
             # mail
@@ -201,6 +316,14 @@ function send_notification() {
             # ping
             send_ping "success" "${SUBJECT_SUCCESS}" "$2"
             send_ping "completion" "${SUBJECT_SUCCESS}" "$2"
+            # discord
+            if [[ "${DISCORD_ENABLED}" == "TRUE" ]]; then
+                send_discord_notification "success" "$2"
+            fi
+            # slack
+            if [[ "${SLACK_ENABLED}" == "TRUE" ]]; then
+                send_slack_notification "success" "$2"
+            fi
             ;;
         failure)
             # mail
@@ -210,6 +333,14 @@ function send_notification() {
             # ping
             send_ping "failure" "${SUBJECT_FAILURE}" "$2"
             send_ping "completion" "${SUBJECT_FAILURE}" "$2"
+            # discord
+            if [[ "${DISCORD_ENABLED}" == "TRUE" ]]; then
+                send_discord_notification "failure" "$2"
+            fi
+            # slack
+            if [[ "${SLACK_ENABLED}" == "TRUE" ]]; then
+                send_slack_notification "failure" "$2"
+            fi
             ;;
     esac
 }
@@ -421,6 +552,33 @@ function init_env() {
     get_env PING_URL
     PING_URL="${PING_URL:-""}"
 
+    # NOTIFY_DEBUG
+    get_env NOTIFY_DEBUG
+    NOTIFY_DEBUG=$(echo "${NOTIFY_DEBUG}" | tr '[a-z]' '[A-Z]')
+    if [[ "${NOTIFY_DEBUG}" != "TRUE" ]]; then
+        NOTIFY_DEBUG="FALSE"
+    fi
+
+    # Discord
+    get_env DISCORD_WEBHOOK_URL
+    get_env DISCORD_ENABLED
+    DISCORD_ENABLED=$(echo "${DISCORD_ENABLED}" | tr '[a-z]' '[A-Z]')
+    if [[ -z "${DISCORD_WEBHOOK_URL}" ]]; then
+        DISCORD_ENABLED="FALSE"
+    elif [[ "${DISCORD_ENABLED}" != "FALSE" ]]; then # Covers TRUE and unset (default to TRUE if URL is present)
+        DISCORD_ENABLED="TRUE"
+    fi
+
+    # Slack
+    get_env SLACK_WEBHOOK_URL
+    get_env SLACK_ENABLED
+    SLACK_ENABLED=$(echo "${SLACK_ENABLED}" | tr '[a-z]' '[A-Z]')
+    if [[ -z "${SLACK_WEBHOOK_URL}" ]]; then
+        SLACK_ENABLED="FALSE"
+    elif [[ "${SLACK_ENABLED}" != "FALSE" ]]; then # Covers TRUE and unset (default to TRUE if URL is present)
+        SLACK_ENABLED="TRUE"
+    fi
+
     # TIMEZONE
     get_env TIMEZONE
     local TIMEZONE_MATCHED_COUNT=$(ls "/usr/share/zoneinfo/${TIMEZONE}" 2> /dev/null | wc -l)
@@ -495,6 +653,15 @@ function init_env() {
         color yellow "MAIL_TO: ${MAIL_TO}"
         color yellow "MAIL_WHEN_SUCCESS: ${MAIL_WHEN_SUCCESS}"
         color yellow "MAIL_WHEN_FAILURE: ${MAIL_WHEN_FAILURE}"
+    fi
+    color yellow "NOTIFY_DEBUG: ${NOTIFY_DEBUG}"
+    color yellow "DISCORD_ENABLED: ${DISCORD_ENABLED}"
+    if [[ "${DISCORD_ENABLED}" == "TRUE" ]]; then
+        color yellow "DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL}"
+    fi
+    color yellow "SLACK_ENABLED: ${SLACK_ENABLED}"
+    if [[ "${SLACK_ENABLED}" == "TRUE" ]]; then
+        color yellow "SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}"
     fi
     color yellow "TIMEZONE: ${TIMEZONE}"
     color yellow "DISPLAY_NAME: ${DISPLAY_NAME}"

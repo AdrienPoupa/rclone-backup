@@ -503,7 +503,7 @@ function init_env() {
     CRON="${CRON:-"5 * * * *"}"
 
     # Validate that RCLONE_REMOTE_NAME_0 and RCLONE_REMOTE_DIR_0 are not explicitly defined
-    if [[ -n "${RCLONE_REMOTE_NAME_0:-}" ]] || [[ -n "${RCLONE_REMOTE_DIR_0:-}" ]]; then
+    if [[ -n "${DOTENV_RCLONE_REMOTE_NAME_0:-}" ]] || [[ -n "${DOTENV_RCLONE_REMOTE_DIR_0:-}" ]]; then
         color red "RCLONE_REMOTE_NAME_0 and RCLONE_REMOTE_DIR_0 are reserved for internal use"
         color blue "Please use RCLONE_REMOTE_NAME and RCLONE_REMOTE_DIR, or use numbered remotes (RCLONE_REMOTE_NAME_1, RCLONE_REMOTE_NAME_2, etc.)"
         exit 1
@@ -606,7 +606,7 @@ function init_env() {
     color yellow "========================================"
 
     # Validate that BACKUP_FOLDER_NAME_0 and BACKUP_FOLDER_PATH_0 are not explicitly defined
-    if [[ -n "${BACKUP_FOLDER_NAME_0:-}" ]] || [[ -n "${BACKUP_FOLDER_PATH_0:-}" ]]; then
+    if [[ -n "${DOTENV_BACKUP_FOLDER_NAME_0:-}" ]] || [[ -n "${DOTENV_BACKUP_FOLDER_PATH_0:-}" ]]; then
         color red "BACKUP_FOLDER_NAME_0 and BACKUP_FOLDER_PATH_0 are reserved for internal use"
         color blue "Please use BACKUP_FOLDER_NAME and BACKUP_FOLDER_PATH, or use numbered folders (BACKUP_FOLDER_NAME_1, BACKUP_FOLDER_NAME_2, etc.)"
         exit 1
